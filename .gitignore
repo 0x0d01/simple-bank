@@ -56,4 +56,8 @@ Thumbs.db
 
 # Spring Boot
 application-local.properties
-application-dev.properties 
+application-dev.properties
+
+# RSA Keys - Keep private keys secure
+keys/
+*.pem 

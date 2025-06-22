@@ -29,8 +29,8 @@ public class UserService {
         // Encrypt password
         String encryptedPassword = passwordEncoder.encode(request.getPassword());
         
-        // Create new user
-        User user = new User(request.getEmail(), encryptedPassword);
+        // Create new user with role
+        User user = new User(request.getEmail(), encryptedPassword, request.getRole());
         User savedUser = userRepository.save(user);
         
         return new UserResponse(savedUser);
@@ -48,6 +48,14 @@ public class UserService {
     public UserResponse getUserById(String id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        
+        return new UserResponse(user);
+    }
+    
+    // Get user by email
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
         
         return new UserResponse(user);
     }

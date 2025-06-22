@@ -21,6 +21,9 @@ public class User {
     @Column(nullable = false)
     private String password;
     
+    @Column(nullable = false)
+    private String role = "USER"; // Default role
+    
     @CreationTimestamp
     @Column(name = "created_date", nullable = false, updatable = false)
     private LocalDateTime createdDate;
@@ -36,6 +39,13 @@ public class User {
     public User(String email, String password) {
         this.email = email;
         this.password = password;
+    }
+    
+    // Constructor with email, password and role
+    public User(String email, String password, String role) {
+        this.email = email;
+        this.password = password;
+        this.role = role;
     }
     
     // Getters and Setters
@@ -61,6 +71,14 @@ public class User {
     
     public void setPassword(String password) {
         this.password = password;
+    }
+    
+    public String getRole() {
+        return role;
+    }
+    
+    public void setRole(String role) {
+        this.role = role;
     }
     
     public LocalDateTime getCreatedDate() {
