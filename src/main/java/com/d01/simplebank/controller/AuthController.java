@@ -7,9 +7,9 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,8 +40,8 @@ public class AuthController {
             String jwt = jwtTokenProvider.generateToken(loginRequest.getEmail());
 
             return ResponseEntity.ok(new LoginResponse(jwt, "Bearer"));
-        } catch (BadCredentialsException e) {
-            // Authentication failed - wrong credentials
+        } catch (AuthenticationException e) {
+            // Authentication failed - wrong credentials or user not found
             return ResponseEntity.status(401).build();
         } catch (Exception e) {
             // Other errors (server error)
