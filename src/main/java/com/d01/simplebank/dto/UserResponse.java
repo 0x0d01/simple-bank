@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public class UserResponse {
     private String id;
     private String email;
+    private String role;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
     
@@ -17,14 +18,16 @@ public class UserResponse {
     public UserResponse(User user) {
         this.id = user.getId();
         this.email = user.getEmail();
+        this.role = user.getRole();
         this.createdDate = user.getCreatedDate();
         this.updatedDate = user.getUpdatedDate();
     }
     
     // Constructor with fields
-    public UserResponse(String id, String email, LocalDateTime createdDate, LocalDateTime updatedDate) {
+    public UserResponse(String id, String email, String role, LocalDateTime createdDate, LocalDateTime updatedDate) {
         this.id = id;
         this.email = email;
+        this.role = role;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }
@@ -44,6 +47,14 @@ public class UserResponse {
     
     public void setEmail(String email) {
         this.email = email;
+    }
+    
+    public String getRole() {
+        return role;
+    }
+    
+    public void setRole(String role) {
+        this.role = role;
     }
     
     public LocalDateTime getCreatedDate() {

@@ -3,6 +3,7 @@ package com.d01.simplebank.service;
 import com.d01.simplebank.dto.CreateUserRequest;
 import com.d01.simplebank.dto.UserResponse;
 import com.d01.simplebank.entity.User;
+import com.d01.simplebank.exception.CustomerAlreadyExistsException;
 import com.d01.simplebank.exception.UserAlreadyExistsException;
 import com.d01.simplebank.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private CustomerService customerService;
+    
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
     // Create a new user
@@ -30,6 +34,14 @@ public class UserService {
             throw new UserAlreadyExistsException("User with email " + request.getEmail() + " already exists");
         }
         
+        // Validate that USER role users must provide customer data
+        if ("USER".equals(request.getRole())) {
+            if (request.getCid() == null || request.getNameTh() == null || 
+                request.getNameEn() == null || request.getPin() == null) {
+                throw new IllegalArgumentException("Customer data (cid, nameTh, nameEn, pin) is required for USER role");
+            }
+        }
+        
         // Encrypt password
         String encryptedPassword = passwordEncoder.encode(request.getPassword());
         
@@ -38,6 +50,23 @@ public class UserService {
         
         try {
             User savedUser = userRepository.save(user);
+            
+            // If user role is "USER", create customer record in the same transaction
+            if ("USER".equals(request.getRole())) {
+                try {
+                    customerService.createCustomer(
+                        request.getCid(),
+                        request.getNameTh(),
+                        request.getNameEn(),
+                        request.getPin(),
+                        savedUser.getId()
+                    );
+                } catch (CustomerAlreadyExistsException e) {
+                    // If customer creation fails, the entire transaction will be rolled back
+                    throw e;
+                }
+            }
+            
             return new UserResponse(savedUser);
         } catch (DataIntegrityViolationException e) {
             // Handle concurrent registration attempts

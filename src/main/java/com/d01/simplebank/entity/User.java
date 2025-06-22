@@ -24,6 +24,9 @@ public class User {
     @Column(nullable = false)
     private String role = "USER"; // Default role
     
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Customer customer;
+    
     @CreationTimestamp
     @Column(name = "created_date", nullable = false, updatable = false)
     private LocalDateTime createdDate;
@@ -39,6 +42,8 @@ public class User {
     public User(String email, String password) {
         this.email = email;
         this.password = password;
+        this.createdDate = LocalDateTime.now();
+        this.updatedDate = LocalDateTime.now();
     }
     
     // Constructor with email, password and role
@@ -46,6 +51,8 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = role;
+        this.createdDate = LocalDateTime.now();
+        this.updatedDate = LocalDateTime.now();
     }
     
     // Getters and Setters
@@ -79,6 +86,14 @@ public class User {
     
     public void setRole(String role) {
         this.role = role;
+    }
+    
+    public Customer getCustomer() {
+        return customer;
+    }
+    
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
     
     public LocalDateTime getCreatedDate() {

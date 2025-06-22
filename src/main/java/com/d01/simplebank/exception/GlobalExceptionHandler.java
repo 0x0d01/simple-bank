@@ -20,6 +20,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
     
+    @ExceptionHandler(CustomerAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleCustomerAlreadyExists(CustomerAlreadyExistsException e) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Customer already exists");
+        errorResponse.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+    
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException e) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Invalid input");
+        errorResponse.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+    
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
         Map<String, String> errorResponse = new HashMap<>();
