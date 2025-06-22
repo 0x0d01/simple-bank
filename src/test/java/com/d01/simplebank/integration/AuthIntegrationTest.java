@@ -63,7 +63,6 @@ class AuthIntegrationTest {
         String encodedPassword = passwordEncoder.encode(password);
         
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
         user.setEmail(email);
         user.setPassword(encodedPassword);
         user.setRole("USER");
@@ -101,7 +100,6 @@ class AuthIntegrationTest {
         String encodedPassword = passwordEncoder.encode(password);
         
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
         user.setEmail(email);
         user.setPassword(encodedPassword);
         user.setRole("USER");
@@ -196,7 +194,6 @@ class AuthIntegrationTest {
         String encodedPassword = passwordEncoder.encode(password);
         
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
         user.setEmail(email);
         user.setPassword(encodedPassword);
         user.setRole("ADMIN");
@@ -244,14 +241,12 @@ class AuthIntegrationTest {
         String encodedPassword = passwordEncoder.encode(password);
         
         User user1 = new User();
-        user1.setId(UUID.randomUUID().toString());
         user1.setEmail(email1);
         user1.setPassword(encodedPassword);
         user1.setRole("USER");
         userRepository.save(user1);
 
         User user2 = new User();
-        user2.setId(UUID.randomUUID().toString());
         user2.setEmail(email2);
         user2.setPassword(encodedPassword);
         user2.setRole("USER");
