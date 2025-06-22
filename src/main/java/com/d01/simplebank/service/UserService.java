@@ -80,14 +80,6 @@ public class UserService {
         }
     }
     
-    // Get all users
-    public List<UserResponse> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        return users.stream()
-                .map(UserResponse::new)
-                .collect(Collectors.toList());
-    }
-    
     // Get user by ID
     public UserResponse getUserById(String id) {
         User user = userRepository.findById(id)

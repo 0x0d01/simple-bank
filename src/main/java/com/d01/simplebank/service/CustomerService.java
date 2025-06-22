@@ -76,16 +76,6 @@ public class CustomerService {
     }
     
     /**
-     * Get all customers
-     */
-    public List<CustomerResponse> getAllCustomers() {
-        List<Customer> customers = customerRepository.findAll();
-        return customers.stream()
-                .map(CustomerResponse::new)
-                .collect(Collectors.toList());
-    }
-    
-    /**
      * Get customer by ID
      */
     public CustomerResponse getCustomerById(String id) {
