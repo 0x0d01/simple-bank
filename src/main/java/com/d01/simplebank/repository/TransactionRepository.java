@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, String> {
@@ -25,6 +26,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
      * @return list of transactions for the account ordered by date descending
      */
     List<Transaction> findByAccountIdOrderByTransactionDateDesc(Long accountId);
+    
+    /**
+     * Find the latest transaction for an account
+     * @param accountId the account ID
+     * @return Optional containing the latest transaction, or empty if no transactions exist
+     */
+    Optional<Transaction> findFirstByAccountIdOrderByTransactionDateDesc(Long accountId);
     
     /**
      * Find all transactions by created user

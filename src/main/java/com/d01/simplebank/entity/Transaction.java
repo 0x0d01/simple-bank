@@ -43,6 +43,12 @@ public class Transaction {
     @Column(name = "metadata", columnDefinition = "JSON")
     private String metadata;
     
+    @Column(name = "hash", nullable = false, length = 64)
+    private String hash; // SHA-256 hash of transaction data
+    
+    @Column(name = "signature", nullable = false, columnDefinition = "TEXT")
+    private String signature; // RSA signature of the hash
+    
     @CreationTimestamp
     @Column(name = "created_date", nullable = false, updatable = false)
     private LocalDateTime createdDate;
@@ -73,6 +79,23 @@ public class Transaction {
         this.remark = remark;
         this.createdBy = createdBy;
         this.metadata = metadata;
+        this.createdDate = LocalDateTime.now();
+    }
+    
+    // Constructor with hash and signature
+    public Transaction(Account account, LocalDateTime transactionDate, Integer amount, 
+                      String type, String channel, String remark, User createdBy, String metadata,
+                      String hash, String signature) {
+        this.account = account;
+        this.transactionDate = transactionDate;
+        setAmount(amount);
+        this.type = type;
+        this.channel = channel;
+        this.remark = remark;
+        this.createdBy = createdBy;
+        this.metadata = metadata;
+        this.hash = hash;
+        this.signature = signature;
         this.createdDate = LocalDateTime.now();
     }
     
@@ -156,6 +179,22 @@ public class Transaction {
     
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+    
+    public String getHash() {
+        return hash;
+    }
+    
+    public void setHash(String hash) {
+        this.hash = hash;
+    }
+    
+    public String getSignature() {
+        return signature;
+    }
+    
+    public void setSignature(String signature) {
+        this.signature = signature;
     }
     
     public LocalDateTime getCreatedDate() {

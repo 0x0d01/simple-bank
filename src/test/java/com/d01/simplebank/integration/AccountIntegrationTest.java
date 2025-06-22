@@ -81,6 +81,9 @@ public class AccountIntegrationTest {
         transaction1.setCreatedDate(now.minusDays(2));
         transaction1.setCreatedBy(testUser);
         transaction1.setRemark("Test deposit");
+        // Add hash and signature for the first transaction (no previous hash)
+        transaction1.setHash("a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456");
+        transaction1.setSignature("dGVzdC1zaWduYXR1cmUtZm9yLXRyYW5zYWN0aW9uLTE=");
         transactionRepository.save(transaction1);
         
         Transaction transaction2 = new Transaction();
@@ -94,6 +97,9 @@ public class AccountIntegrationTest {
         transaction2.setCreatedDate(now.minusDays(1));
         transaction2.setCreatedBy(testUser);
         transaction2.setRemark("Test withdrawal");
+        // Add hash and signature for the second transaction (different from first)
+        transaction2.setHash("b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678");
+        transaction2.setSignature("dGVzdC1zaWduYXR1cmUtZm9yLXRyYW5zYWN0aW9uLTI=");
         transactionRepository.save(transaction2);
 
         // Set up authentication context
