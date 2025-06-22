@@ -57,4 +57,26 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
+    
+    // GET /users/cid/:cid - Get user by CID
+    @GetMapping("/cid/{cid}")
+    public ResponseEntity<UserResponse> getUserByCid(@PathVariable String cid) {
+        try {
+            UserResponse user = userService.getUserByCid(cid);
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    // POST /users/cid/:cid/verify-pin - Verify PIN for a user
+    @PostMapping("/cid/{cid}/verify-pin")
+    public ResponseEntity<Boolean> verifyPin(@PathVariable String cid, @RequestBody String pin) {
+        try {
+            boolean isValid = userService.verifyPin(cid, pin);
+            return ResponseEntity.ok(isValid);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 } 

@@ -15,6 +15,13 @@ public class CustomUserDetails implements UserDetails {
     private final String email;
     private final String password;
     private final String role;
+    
+    // Customer fields
+    private final String cid;
+    private final String nameTh;
+    private final String nameEn;
+    private final String pin;
+    
     private final LocalDateTime createdDate;
     private final LocalDateTime updatedDate;
     private final boolean enabled;
@@ -25,6 +32,10 @@ public class CustomUserDetails implements UserDetails {
         this.email = user.getEmail();
         this.password = user.getPassword();
         this.role = user.getRole();
+        this.cid = user.getCid();
+        this.nameTh = user.getNameTh();
+        this.nameEn = user.getNameEn();
+        this.pin = user.getPin();
         this.createdDate = user.getCreatedDate();
         this.updatedDate = user.getUpdatedDate();
         this.enabled = true; // You can add an enabled field to User entity if needed
@@ -38,6 +49,23 @@ public class CustomUserDetails implements UserDetails {
     
     public String getRole() {
         return role;
+    }
+    
+    // Customer field getters
+    public String getCid() {
+        return cid;
+    }
+    
+    public String getNameTh() {
+        return nameTh;
+    }
+    
+    public String getNameEn() {
+        return nameEn;
+    }
+    
+    public String getPin() {
+        return pin;
     }
     
     public LocalDateTime getCreatedDate() {

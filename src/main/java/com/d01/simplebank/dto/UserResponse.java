@@ -8,6 +8,13 @@ public class UserResponse {
     private String id;
     private String email;
     private String role;
+    
+    // Customer fields
+    private String cid;
+    private String nameTh;
+    private String nameEn;
+    private String pin; // This will be null in responses for security
+    
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
     
@@ -19,15 +26,22 @@ public class UserResponse {
         this.id = user.getId();
         this.email = user.getEmail();
         this.role = user.getRole();
+        this.cid = user.getCid();
+        this.nameTh = user.getNameTh();
+        this.nameEn = user.getNameEn();
+        // Don't include PIN in response for security
         this.createdDate = user.getCreatedDate();
         this.updatedDate = user.getUpdatedDate();
     }
     
     // Constructor with fields
-    public UserResponse(String id, String email, String role, LocalDateTime createdDate, LocalDateTime updatedDate) {
+    public UserResponse(String id, String email, String role, String cid, String nameTh, String nameEn, LocalDateTime createdDate, LocalDateTime updatedDate) {
         this.id = id;
         this.email = email;
         this.role = role;
+        this.cid = cid;
+        this.nameTh = nameTh;
+        this.nameEn = nameEn;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }
@@ -55,6 +69,38 @@ public class UserResponse {
     
     public void setRole(String role) {
         this.role = role;
+    }
+    
+    public String getCid() {
+        return cid;
+    }
+    
+    public void setCid(String cid) {
+        this.cid = cid;
+    }
+    
+    public String getNameTh() {
+        return nameTh;
+    }
+    
+    public void setNameTh(String nameTh) {
+        this.nameTh = nameTh;
+    }
+    
+    public String getNameEn() {
+        return nameEn;
+    }
+    
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
+    }
+    
+    public String getPin() {
+        return pin;
+    }
+    
+    public void setPin(String pin) {
+        this.pin = pin;
     }
     
     public LocalDateTime getCreatedDate() {

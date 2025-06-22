@@ -24,8 +24,18 @@ public class User {
     @Column(nullable = false)
     private String role = "USER"; // Default role
     
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Customer customer;
+    // Customer fields (nullable for admin users)
+    @Column(name = "cid", unique = true, length = 13)
+    private String cid; // 13-digit numeric string
+    
+    @Column(name = "name_th", columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+    private String nameTh; // Thai name with UTF-8 support
+    
+    @Column(name = "name_en")
+    private String nameEn; // English name
+    
+    @Column(name = "pin")
+    private String pin; // Encrypted 6-digit PIN using bcrypt
     
     @CreationTimestamp
     @Column(name = "created_date", nullable = false, updatable = false)
@@ -51,6 +61,19 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = role;
+        this.createdDate = LocalDateTime.now();
+        this.updatedDate = LocalDateTime.now();
+    }
+    
+    // Constructor with all customer fields
+    public User(String email, String password, String role, String cid, String nameTh, String nameEn, String pin) {
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.cid = cid;
+        this.nameTh = nameTh;
+        this.nameEn = nameEn;
+        this.pin = pin;
         this.createdDate = LocalDateTime.now();
         this.updatedDate = LocalDateTime.now();
     }
@@ -88,12 +111,36 @@ public class User {
         this.role = role;
     }
     
-    public Customer getCustomer() {
-        return customer;
+    public String getCid() {
+        return cid;
     }
     
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
+    public void setCid(String cid) {
+        this.cid = cid;
+    }
+    
+    public String getNameTh() {
+        return nameTh;
+    }
+    
+    public void setNameTh(String nameTh) {
+        this.nameTh = nameTh;
+    }
+    
+    public String getNameEn() {
+        return nameEn;
+    }
+    
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
+    }
+    
+    public String getPin() {
+        return pin;
+    }
+    
+    public void setPin(String pin) {
+        this.pin = pin;
     }
     
     public LocalDateTime getCreatedDate() {

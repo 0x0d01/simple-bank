@@ -20,14 +20,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
     
-    @ExceptionHandler(CustomerAlreadyExistsException.class)
-    public ResponseEntity<Map<String, String>> handleCustomerAlreadyExists(CustomerAlreadyExistsException e) {
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("error", "Customer already exists");
-        errorResponse.put("message", e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-    }
-    
     @ExceptionHandler(AccountAlreadyExistsException.class)
     public ResponseEntity<Map<String, String>> handleAccountAlreadyExists(AccountAlreadyExistsException e) {
         Map<String, String> errorResponse = new HashMap<>();
