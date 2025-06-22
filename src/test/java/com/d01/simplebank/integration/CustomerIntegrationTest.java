@@ -155,7 +155,7 @@ public class CustomerIntegrationTest {
         userRequest.setNameEn("Test System");
         userRequest.setPin(pin);
         
-        UserResponse userResponse = userService.createUser(userRequest);
+        userService.createUser(userRequest);
         
         // When
         boolean isValid = customerService.verifyPin(cid, pin);

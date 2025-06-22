@@ -4,13 +4,11 @@ import com.d01.simplebank.dto.AccountResponse;
 import com.d01.simplebank.dto.CreateAccountRequest;
 import com.d01.simplebank.entity.Account;
 import com.d01.simplebank.entity.Customer;
-import com.d01.simplebank.entity.User;
 import com.d01.simplebank.exception.AccessDeniedException;
 import com.d01.simplebank.exception.AccountAlreadyExistsException;
 import com.d01.simplebank.exception.AccountNotFoundException;
 import com.d01.simplebank.repository.AccountRepository;
 import com.d01.simplebank.repository.CustomerRepository;
-import com.d01.simplebank.repository.UserRepository;
 import com.d01.simplebank.security.CustomUserDetails;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +23,6 @@ public class AccountService {
     
     @Autowired
     private AccountRepository accountRepository;
-    
-    @Autowired
-    private UserRepository userRepository;
     
     @Autowired
     private CustomerRepository customerRepository;

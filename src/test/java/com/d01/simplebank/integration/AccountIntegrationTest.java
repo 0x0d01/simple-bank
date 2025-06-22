@@ -1,8 +1,6 @@
 package com.d01.simplebank.integration;
 
 import com.d01.simplebank.dto.CreateAccountRequest;
-import com.d01.simplebank.entity.Account;
-import com.d01.simplebank.repository.AccountRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,9 +25,6 @@ public class AccountIntegrationTest {
 
     @Autowired
     private WebApplicationContext context;
-
-    @Autowired
-    private AccountRepository accountRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
