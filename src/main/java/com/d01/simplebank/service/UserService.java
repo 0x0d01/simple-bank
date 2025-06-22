@@ -3,10 +3,13 @@ package com.d01.simplebank.service;
 import com.d01.simplebank.dto.CreateUserRequest;
 import com.d01.simplebank.dto.UserResponse;
 import com.d01.simplebank.entity.User;
+import com.d01.simplebank.exception.UserAlreadyExistsException;
 import com.d01.simplebank.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,10 +23,11 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     
     // Create a new user
+    @Transactional
     public UserResponse createUser(CreateUserRequest request) {
-        // Check if user already exists
+        // Check if user already exists (optimistic check)
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("User with email " + request.getEmail() + " already exists");
+            throw new UserAlreadyExistsException("User with email " + request.getEmail() + " already exists");
         }
         
         // Encrypt password
@@ -31,9 +35,20 @@ public class UserService {
         
         // Create new user with role
         User user = new User(request.getEmail(), encryptedPassword, request.getRole());
-        User savedUser = userRepository.save(user);
         
-        return new UserResponse(savedUser);
+        try {
+            User savedUser = userRepository.save(user);
+            return new UserResponse(savedUser);
+        } catch (DataIntegrityViolationException e) {
+            // Handle concurrent registration attempts
+            String errorMessage = e.getMessage();
+
+            // Check for MySQL duplicate entry errors
+            if (errorMessage.contains("Duplicate entry")) {
+                throw new UserAlreadyExistsException("User with email " + request.getEmail() + " already exists", e);
+            }
+            throw e; // Re-throw if it's a different constraint violation
+        }
     }
     
     // Get all users
