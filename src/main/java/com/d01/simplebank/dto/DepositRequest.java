@@ -14,7 +14,7 @@ public class DepositRequest {
     private String accountNo;
     
     @NotNull(message = "Amount is required")
-    @Min(value = 1, message = "Amount must be 1 or more")
+    @Min(value = 100, message = "Amount must be 100 or more")
     private Integer amount;
     
     // Default constructor

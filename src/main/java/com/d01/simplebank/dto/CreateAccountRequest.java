@@ -16,7 +16,7 @@ public class CreateAccountRequest {
     @NotBlank(message = "English name is required")
     private String nameEn;
     
-    @Min(value = 1, message = "Amount must be 1 or more if provided")
+    @Min(value = 100, message = "Amount must be 100 or more if provided")
     private Integer amount; // Optional initial deposit amount
     
     // Default constructor
