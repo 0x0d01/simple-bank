@@ -15,7 +15,7 @@ public class TransferRequest {
     private String receiverAccountNo;
     
     @NotNull(message = "Amount is required")
-    @Min(value = 0, message = "Amount must be 0 or more")
+    @Min(value = 1, message = "Amount must be 1 or more")
     private Integer amount;
     
     @NotNull(message = "PIN is required")

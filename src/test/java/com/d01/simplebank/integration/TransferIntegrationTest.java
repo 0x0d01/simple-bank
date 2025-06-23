@@ -231,4 +231,64 @@ public class TransferIntegrationTest {
                 .content(requestJson))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @WithMockUser(username = "user@test.com", roles = "USER")
+    public void testProcessTransfer_ZeroAmount_ShouldReturnBadRequest() throws Exception {
+        // Create transfer request with amount 0 (should be rejected as minimum is 1)
+        TransferRequest request = new TransferRequest(
+                String.format("%07d", senderAccount.getId()),
+                String.format("%07d", receiverAccount.getId()),
+                0, // Zero amount - should be rejected
+                "123456"
+        );
+
+        // Perform POST request - should fail
+        mockMvc.perform(post("/tx/transfer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "user@test.com", roles = "USER")
+    public void testProcessTransfer_MinimumAmount_ShouldSucceed() throws Exception {
+        // First, deposit some money into the sender account using admin
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String adminEncryptedPin = passwordEncoder.encode("111111");
+        User adminUser = new User("admin@test.com", "password", "ADMIN", "1111111111111", "แอดมิน", "Admin User", adminEncryptedPin);
+        adminUser = userRepository.save(adminUser);
+        
+        // Create deposit request to add balance to sender account
+        DepositRequest depositRequest = new DepositRequest(
+                "minimum-amount-test-deposit",
+                String.format("%07d", senderAccount.getId()),
+                1000 // 10.00
+        );
+
+        // Perform deposit as admin
+        mockMvc.perform(post("/tx/deposit")
+                .with(user("admin@test.com").roles("ADMIN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(depositRequest)))
+                .andExpect(status().isCreated());
+
+        // Now perform the transfer with minimum amount (1) as the regular user
+        TransferRequest request = new TransferRequest(
+                String.format("%07d", senderAccount.getId()),
+                String.format("%07d", receiverAccount.getId()),
+                1, // Minimum valid amount (1 stang)
+                "123456" // PIN
+        );
+
+        // Perform POST request - should succeed
+        mockMvc.perform(post("/tx/transfer")
+                .with(user("user@test.com").roles("USER"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.id").exists());
+    }
 } 
