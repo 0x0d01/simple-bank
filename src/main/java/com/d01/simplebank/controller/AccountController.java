@@ -3,6 +3,7 @@ package com.d01.simplebank.controller;
 import com.d01.simplebank.dto.AccountResponse;
 import com.d01.simplebank.dto.BankStatementRequest;
 import com.d01.simplebank.dto.CreateAccountRequest;
+import com.d01.simplebank.dto.CreateAccountResponse;
 import com.d01.simplebank.service.AccountService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +26,12 @@ public class AccountController {
      * Create a new account
      * Only ADMIN users can create accounts
      * @param request the account creation request (amount field is optional for initial deposit)
-     * @return ResponseEntity with created account details
+     * @return ResponseEntity with created account ID
      */
     @PostMapping
-    public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody CreateAccountRequest request) {
+    public ResponseEntity<CreateAccountResponse> createAccount(@Valid @RequestBody CreateAccountRequest request) {
         AccountResponse account = accountService.createAccount(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(account);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CreateAccountResponse(account.getId()));
     }
     
     /**

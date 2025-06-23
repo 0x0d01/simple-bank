@@ -1,6 +1,7 @@
 package com.d01.simplebank.controller;
 
 import com.d01.simplebank.dto.CreateUserRequest;
+import com.d01.simplebank.dto.CreateUserResponse;
 import com.d01.simplebank.dto.UserResponse;
 import com.d01.simplebank.exception.UserAlreadyExistsException;
 import com.d01.simplebank.security.CustomUserDetails;
@@ -22,10 +23,10 @@ public class UserController {
     
     // POST /users - Create a new user
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<CreateUserResponse> createUser(@RequestBody CreateUserRequest request) {
         try {
             UserResponse user = userService.createUser(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new CreateUserResponse(user.getId()));
         } catch (UserAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (RuntimeException e) {

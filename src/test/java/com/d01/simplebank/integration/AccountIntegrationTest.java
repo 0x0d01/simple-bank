@@ -131,9 +131,9 @@ public class AccountIntegrationTest {
         adminAuth.setDetails(adminDetails);
         SecurityContextHolder.getContext().setAuthentication(adminAuth);
 
-        // Given - Use a different CID to avoid conflict
+        // Given
         CreateAccountRequest request = new CreateAccountRequest(
-                "1234567890124", // Different CID
+                "1234567890124",
                 "บัญชีทดสอบ",
                 "Test Account"
         );
@@ -143,13 +143,8 @@ public class AccountIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.cid").value("1234567890124"))
-                .andExpect(jsonPath("$.nameTh").value("บัญชีทดสอบ"))
-                .andExpect(jsonPath("$.nameEn").value("Test Account"))
                 .andExpect(jsonPath("$.id").isString())
-                .andExpect(jsonPath("$.id").value(org.hamcrest.Matchers.matchesPattern("\\d{7}")))
-                .andExpect(jsonPath("$.createdDate").exists())
-                .andExpect(jsonPath("$.updatedDate").exists());
+                .andExpect(jsonPath("$.id").value(org.hamcrest.Matchers.matchesPattern("\\d{7}")));
     }
 
     @Test
@@ -175,9 +170,8 @@ public class AccountIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request1)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.cid").value("1234567890125"))
-                .andExpect(jsonPath("$.nameTh").value("บัญชีแรก"))
-                .andExpect(jsonPath("$.nameEn").value("First Account"));
+                .andExpect(jsonPath("$.id").isString())
+                .andExpect(jsonPath("$.id").value(org.hamcrest.Matchers.matchesPattern("\\d{7}")));
 
         // Given - Create second account with same CID
         CreateAccountRequest request2 = new CreateAccountRequest(
@@ -191,9 +185,8 @@ public class AccountIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request2)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.cid").value("1234567890125"))
-                .andExpect(jsonPath("$.nameTh").value("บัญชีที่สอง"))
-                .andExpect(jsonPath("$.nameEn").value("Second Account"));
+                .andExpect(jsonPath("$.id").isString())
+                .andExpect(jsonPath("$.id").value(org.hamcrest.Matchers.matchesPattern("\\d{7}")));
     }
 
     @Test
@@ -472,9 +465,8 @@ public class AccountIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.cid").value("9999999999999"))
-                .andExpect(jsonPath("$.nameTh").value("ทดสอบ"))
-                .andExpect(jsonPath("$.nameEn").value("Test User"));
+                .andExpect(jsonPath("$.id").isString())
+                .andExpect(jsonPath("$.id").value(org.hamcrest.Matchers.matchesPattern("\\d{7}")));
 
         // Verify that the account was created
         List<Account> accounts = accountRepository.findByCid("9999999999999");
