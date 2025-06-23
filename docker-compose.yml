@@ -13,5 +13,18 @@ services:
       - mysql-data:/var/lib/mysql
       - ./src/main/resources/db:/docker-entrypoint-initdb.d
 
+  app:
+    build: .
+    working_dir: /app
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    depends_on:
+      - mysql
+    command: mvn spring-boot:run
+
 volumes:
   mysql-data:
