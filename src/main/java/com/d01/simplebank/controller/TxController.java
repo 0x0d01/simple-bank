@@ -8,9 +8,11 @@ import com.d01.simplebank.entity.Transaction;
 import com.d01.simplebank.entity.User;
 import com.d01.simplebank.exception.AccessDeniedException;
 import com.d01.simplebank.exception.AccountNotFoundException;
+import com.d01.simplebank.exception.InvalidPinException;
 import com.d01.simplebank.repository.AccountRepository;
 import com.d01.simplebank.repository.UserRepository;
 import com.d01.simplebank.service.TransactionService;
+import com.d01.simplebank.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,9 @@ public class TxController {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private UserService userService;
     
     /**
      * Process a deposit transaction (ADMIN only)
@@ -68,6 +73,7 @@ public class TxController {
     
     /**
      * Process a transfer transaction (USER only)
+     * PIN verification is required
      * @param request the transfer request
      * @return ResponseEntity with success status and transaction ID of the sender account
      */
@@ -94,6 +100,12 @@ public class TxController {
         // Check if the sender account belongs to the current user
         if (!currentUser.getCid().equals(senderAccount.getCid())) {
             throw new AccessDeniedException("Access denied: You can only transfer from your own accounts");
+        }
+        
+        // Verify PIN
+        boolean isPinValid = userService.verifyPin(currentUser.getCid(), request.getPin());
+        if (!isPinValid) {
+            throw new InvalidPinException("Invalid PIN provided");
         }
         
         // Process the transfer

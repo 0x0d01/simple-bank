@@ -18,14 +18,19 @@ public class TransferRequest {
     @Min(value = 0, message = "Amount must be 0 or more")
     private Integer amount;
     
+    @NotNull(message = "PIN is required")
+    @Pattern(regexp = "^[0-9]{6}$", message = "PIN must be exactly 6 numeric digits")
+    private String pin;
+    
     // Default constructor
     public TransferRequest() {}
     
     // Constructor with required fields
-    public TransferRequest(String senderAccountNo, String receiverAccountNo, Integer amount) {
+    public TransferRequest(String senderAccountNo, String receiverAccountNo, Integer amount, String pin) {
         this.senderAccountNo = senderAccountNo;
         this.receiverAccountNo = receiverAccountNo;
         this.amount = amount;
+        this.pin = pin;
     }
     
     // Getters and Setters
@@ -51,5 +56,13 @@ public class TransferRequest {
     
     public void setAmount(Integer amount) {
         this.amount = amount;
+    }
+    
+    public String getPin() {
+        return pin;
+    }
+    
+    public void setPin(String pin) {
+        this.pin = pin;
     }
 } 

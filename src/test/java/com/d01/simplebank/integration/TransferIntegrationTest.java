@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -57,8 +58,11 @@ public class TransferIntegrationTest {
                 .apply(springSecurity())
                 .build();
 
-        // Create user
-        user = new User("user@test.com", "password", "USER", "1234567890123", "ผู้ใช้", "Test User", "123456");
+        // Create user with encrypted PIN
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String encryptedPin = passwordEncoder.encode("123456");
+        
+        user = new User("user@test.com", "password", "USER", "1234567890123", "ผู้ใช้", "Test User", encryptedPin);
         user = userRepository.save(user);
 
         // Create sender account (belongs to the user)
@@ -66,7 +70,8 @@ public class TransferIntegrationTest {
         senderAccount = accountRepository.save(senderAccount);
 
         // Create receiver account (different user)
-        User receiverUser = new User("receiver@test.com", "password", "USER", "9876543210987", "ผู้รับ", "Receiver User", "654321");
+        String receiverEncryptedPin = passwordEncoder.encode("654321");
+        User receiverUser = new User("receiver@test.com", "password", "USER", "9876543210987", "ผู้รับ", "Receiver User", receiverEncryptedPin);
         receiverUser = userRepository.save(receiverUser);
         receiverAccount = new Account(receiverUser.getCid(), receiverUser.getNameTh(), receiverUser.getNameEn());
         receiverAccount = accountRepository.save(receiverAccount);
@@ -77,7 +82,9 @@ public class TransferIntegrationTest {
     public void testProcessTransfer_Success() throws Exception {
         // First, deposit some money into the sender account using admin
         // We need to switch to admin user for deposit
-        User adminUser = new User("admin@test.com", "password", "ADMIN", "1111111111111", "แอดมิน", "Admin User", "111111");
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String adminEncryptedPin = passwordEncoder.encode("111111");
+        User adminUser = new User("admin@test.com", "password", "ADMIN", "1111111111111", "แอดมิน", "Admin User", adminEncryptedPin);
         adminUser = userRepository.save(adminUser);
         
         // Create deposit request to add balance to sender account
@@ -98,7 +105,8 @@ public class TransferIntegrationTest {
         TransferRequest request = new TransferRequest(
                 String.format("%07d", senderAccount.getId()),
                 String.format("%07d", receiverAccount.getId()),
-                5000 // 50.00
+                5000, // 50.00
+                "123456" // PIN
         );
 
         // Perform POST request
@@ -119,7 +127,8 @@ public class TransferIntegrationTest {
         TransferRequest request = new TransferRequest(
                 String.format("%07d", senderAccount.getId()),
                 String.format("%07d", receiverAccount.getId()),
-                5000
+                5000,
+                "123456"
         );
 
         // Perform POST request - should fail for non-user role
@@ -136,7 +145,8 @@ public class TransferIntegrationTest {
         TransferRequest request = new TransferRequest(
                 "9999999",
                 String.format("%07d", receiverAccount.getId()),
-                5000
+                5000,
+                "123456"
         );
 
         // Perform POST request - should fail
@@ -150,7 +160,9 @@ public class TransferIntegrationTest {
     @WithMockUser(username = "user@test.com", roles = "USER")
     public void testProcessTransfer_UnauthorizedSenderAccount_ShouldReturnForbidden() throws Exception {
         // Create a different user and account
-        User differentUser = new User("different@test.com", "password", "USER", "1111111111111", "ต่าง", "Different User", "111111");
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String differentEncryptedPin = passwordEncoder.encode("111111");
+        User differentUser = new User("different@test.com", "password", "USER", "1111111111111", "ต่าง", "Different User", differentEncryptedPin);
         differentUser = userRepository.save(differentUser);
         Account differentAccount = new Account(differentUser.getCid(), differentUser.getNameTh(), differentUser.getNameEn());
         differentAccount = accountRepository.save(differentAccount);
@@ -159,7 +171,8 @@ public class TransferIntegrationTest {
         TransferRequest request = new TransferRequest(
                 String.format("%07d", differentAccount.getId()),
                 String.format("%07d", receiverAccount.getId()),
-                5000
+                5000,
+                "123456"
         );
 
         // Perform POST request - should fail
@@ -176,7 +189,8 @@ public class TransferIntegrationTest {
         TransferRequest request = new TransferRequest(
                 String.format("%07d", senderAccount.getId()),
                 String.format("%07d", receiverAccount.getId()),
-                1000000 // 10000.00 (assuming account has no balance)
+                1000000, // 10000.00 (assuming account has no balance)
+                "123456"
         );
 
         // Perform POST request - should fail
@@ -184,6 +198,25 @@ public class TransferIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(username = "user@test.com", roles = "USER")
+    public void testProcessTransfer_InvalidPin_ShouldReturnBadRequest() throws Exception {
+        // Create transfer request with invalid PIN
+        TransferRequest request = new TransferRequest(
+                String.format("%07d", senderAccount.getId()),
+                String.format("%07d", receiverAccount.getId()),
+                5000,
+                "654321" // Wrong PIN
+        );
+
+        // Perform POST request - should fail
+        mockMvc.perform(post("/tx/transfer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid PIN"));
     }
 
     @Test

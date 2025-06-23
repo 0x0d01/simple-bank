@@ -1,5 +1,6 @@
 package com.d01.simplebank.integration;
 
+import com.d01.simplebank.dto.BankStatementRequest;
 import com.d01.simplebank.dto.CreateAccountRequest;
 import com.d01.simplebank.entity.Account;
 import com.d01.simplebank.entity.Transaction;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -62,8 +64,11 @@ public class AccountIntegrationTest {
                 .apply(springSecurity())
                 .build();
 
-        // Create test user
-        testUser = new User("test@example.com", "password", "USER", "1234567890123", "ทดสอบ", "Test User", "123456");
+        // Create test user with encrypted PIN
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String encryptedPin = passwordEncoder.encode("123456");
+        
+        testUser = new User("test@example.com", "password", "USER", "1234567890123", "ทดสอบ", "Test User", encryptedPin);
         testUser = userRepository.save(testUser);
 
         // Create test account (let JPA generate the ID)
@@ -300,9 +305,10 @@ public class AccountIntegrationTest {
     public void testGenerateStatement_Valid7DigitId_Success() throws Exception {
         // When & Then - Test with valid 7-digit zero-padded ID
         String accountIdStr = String.format("%07d", testAccount.getId());
-        mockMvc.perform(get("/accounts/" + accountIdStr + "/statement")
-                .param("since", "1640995200")
-                .param("until", "1643673600"))
+        BankStatementRequest request = new BankStatementRequest("123456", 1640995200L, 1643673600L);
+        mockMvc.perform(post("/accounts/" + accountIdStr + "/statement")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "text/csv"))
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"bank_statement_" + accountIdStr + "_1640995200_1643673600.csv\""));
@@ -311,27 +317,30 @@ public class AccountIntegrationTest {
     @Test
     public void testGenerateStatement_InvalidIdTooShort_BadRequest() throws Exception {
         // When & Then - Test with ID that's too short
-        mockMvc.perform(get("/accounts/123/statement")
-                .param("since", "1640995200")
-                .param("until", "1643673600"))
+        BankStatementRequest request = new BankStatementRequest("123456", 1640995200L, 1643673600L);
+        mockMvc.perform(post("/accounts/123/statement")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     public void testGenerateStatement_InvalidIdTooLong_BadRequest() throws Exception {
         // When & Then - Test with ID that's too long
-        mockMvc.perform(get("/accounts/12345678/statement")
-                .param("since", "1640995200")
-                .param("until", "1643673600"))
+        BankStatementRequest request = new BankStatementRequest("123456", 1640995200L, 1643673600L);
+        mockMvc.perform(post("/accounts/12345678/statement")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     public void testGenerateStatement_InvalidIdNonNumeric_BadRequest() throws Exception {
         // When & Then - Test with ID containing non-numeric characters
-        mockMvc.perform(get("/accounts/123456a/statement")
-                .param("since", "1640995200")
-                .param("until", "1643673600"))
+        BankStatementRequest request = new BankStatementRequest("123456", 1640995200L, 1643673600L);
+        mockMvc.perform(post("/accounts/123456a/statement")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -339,18 +348,33 @@ public class AccountIntegrationTest {
     public void testGenerateStatement_UserRole_Success() throws Exception {
         // When & Then - Test with USER role
         String accountIdStr = String.format("%07d", testAccount.getId());
-        mockMvc.perform(get("/accounts/" + accountIdStr + "/statement")
-                .param("since", "1640995200")
-                .param("until", "1643673600"))
+        BankStatementRequest request = new BankStatementRequest("123456", 1640995200L, 1643673600L);
+        mockMvc.perform(post("/accounts/" + accountIdStr + "/statement")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testGenerateStatement_InvalidPin_BadRequest() throws Exception {
+        // When & Then - Test with invalid PIN
+        String accountIdStr = String.format("%07d", testAccount.getId());
+        BankStatementRequest request = new BankStatementRequest("654321", 1640995200L, 1643673600L); // Wrong PIN
+        mockMvc.perform(post("/accounts/" + accountIdStr + "/statement")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid PIN"));
     }
 
     @Test
     public void testGenerateStatement_MissingSinceParam_BadRequest() throws Exception {
         // When & Then - Test with missing since parameter
         String accountIdStr = String.format("%07d", testAccount.getId());
-        mockMvc.perform(get("/accounts/" + accountIdStr + "/statement")
-                .param("until", "1643673600"))
+        BankStatementRequest request = new BankStatementRequest("123456", null, 1643673600L);
+        mockMvc.perform(post("/accounts/" + accountIdStr + "/statement")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -358,8 +382,10 @@ public class AccountIntegrationTest {
     public void testGenerateStatement_MissingUntilParam_BadRequest() throws Exception {
         // When & Then - Test with missing until parameter
         String accountIdStr = String.format("%07d", testAccount.getId());
-        mockMvc.perform(get("/accounts/" + accountIdStr + "/statement")
-                .param("since", "1640995200"))
+        BankStatementRequest request = new BankStatementRequest("123456", 1640995200L, null);
+        mockMvc.perform(post("/accounts/" + accountIdStr + "/statement")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 

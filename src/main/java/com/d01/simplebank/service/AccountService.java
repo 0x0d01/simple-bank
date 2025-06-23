@@ -6,6 +6,7 @@ import com.d01.simplebank.entity.Account;
 import com.d01.simplebank.entity.Transaction;
 import com.d01.simplebank.exception.AccessDeniedException;
 import com.d01.simplebank.exception.AccountNotFoundException;
+import com.d01.simplebank.exception.InvalidPinException;
 import com.d01.simplebank.repository.AccountRepository;
 import com.d01.simplebank.repository.TransactionRepository;
 import com.d01.simplebank.security.CustomUserDetails;
@@ -30,6 +31,9 @@ public class AccountService {
     
     @Autowired
     private TransactionRepository transactionRepository;
+    
+    @Autowired
+    private UserService userService;
     
     /**
      * Create a new account - Only ADMIN users can create accounts
@@ -80,19 +84,35 @@ public class AccountService {
     /**
      * Generate bank statement in CSV format
      * Only USER role and account owner can access this
+     * PIN verification is required
      * @param accountId the account ID
      * @param since the start timestamp (Unix timestamp in seconds)
      * @param until the end timestamp (Unix timestamp in seconds)
+     * @param pin the user's PIN for verification
      * @return InputStream containing CSV data
      */
-    public InputStream generateStatement(Long accountId, long since, long until) {
+    public InputStream generateStatement(Long accountId, long since, long until, String pin) {
         // Get current user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomUserDetails currentUserDetails = (CustomUserDetails)authentication.getPrincipal();
         
+        // Verify PIN first
+        boolean isPinValid = userService.verifyPin(currentUserDetails.getCid(), pin);
+        if (!isPinValid) {
+            throw new InvalidPinException("Invalid PIN provided");
+        }
+        
         // Check if user has USER role
         if (!"USER".equals(currentUserDetails.getRole())) {
             throw new AccessDeniedException("Only USER role can generate statements");
+        }
+        
+        // Validate timestamps
+        if (since < 0 || until < 0) {
+            throw new IllegalArgumentException("Timestamps must be positive");
+        }
+        if (since >= until) {
+            throw new IllegalArgumentException("Since timestamp must be less than until timestamp");
         }
         
         // Find the account
@@ -102,14 +122,6 @@ public class AccountService {
         // Check if user is the account owner
         if (!currentUserDetails.getCid().equals(account.getCid())) {
             throw new AccessDeniedException("Access denied: Only account owner can generate statements");
-        }
-        
-        // Validate timestamps
-        if (since < 0 || until < 0) {
-            throw new IllegalArgumentException("Timestamps must be positive");
-        }
-        if (since >= until) {
-            throw new IllegalArgumentException("Since timestamp must be less than until timestamp");
         }
         
         // Convert Unix timestamps to LocalDateTime

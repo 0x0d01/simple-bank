@@ -1,6 +1,7 @@
 package com.d01.simplebank.controller;
 
 import com.d01.simplebank.dto.AccountResponse;
+import com.d01.simplebank.dto.BankStatementRequest;
 import com.d01.simplebank.dto.CreateAccountRequest;
 import com.d01.simplebank.service.AccountService;
 import jakarta.validation.Valid;
@@ -59,16 +60,15 @@ public class AccountController {
     /**
      * Generate bank statement in CSV format
      * Only USER role and account owner can access this
+     * PIN verification is required
      * @param id the account ID (7-digit zero-padded string)
-     * @param since the start timestamp (Unix timestamp in seconds)
-     * @param until the end timestamp (Unix timestamp in seconds)
+     * @param request the bank statement request containing PIN, since, and until timestamps
      * @return ResponseEntity with CSV file attachment
      */
-    @GetMapping("/{id}/statement")
+    @PostMapping("/{id}/statement")
     public ResponseEntity<byte[]> generateStatement(
             @PathVariable String id,
-            @RequestParam long since,
-            @RequestParam long until) {
+            @Valid @RequestBody BankStatementRequest request) {
         
         // Validate 7-digit format
         if (id == null || id.length() != 7 || !id.matches("\\d{7}")) {
@@ -77,11 +77,11 @@ public class AccountController {
         
         try {
             Long accountId = Long.parseLong(id);
-            InputStream csvStream = accountService.generateStatement(accountId, since, until);
+            InputStream csvStream = accountService.generateStatement(accountId, request.getSince(), request.getUntil(), request.getPin());
             byte[] csvBytes = csvStream.readAllBytes();
             
             // Create filename
-            String filename = String.format("bank_statement_%s_%d_%d.csv", id, since, until);
+            String filename = String.format("bank_statement_%s_%d_%d.csv", id, request.getSince(), request.getUntil());
             
             // Set response headers for file download
             HttpHeaders headers = new HttpHeaders();
@@ -98,6 +98,6 @@ public class AccountController {
         } catch (java.io.IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        // Let AccountNotFoundException, AccessDeniedException, and IllegalArgumentException propagate to GlobalExceptionHandler
+        // Let AccountNotFoundException, AccessDeniedException, InvalidPinException, and IllegalArgumentException propagate to GlobalExceptionHandler
     }
 } 

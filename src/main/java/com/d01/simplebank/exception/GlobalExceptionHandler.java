@@ -52,6 +52,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
     }
     
+    @ExceptionHandler(InvalidPinException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidPin(InvalidPinException e) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Invalid PIN");
+        errorResponse.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+    
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException e) {
         Map<String, String> errorResponse = new HashMap<>();

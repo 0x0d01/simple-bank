@@ -36,6 +36,9 @@ public class AccountServiceTest {
     private TransactionRepository transactionRepository;
 
     @Mock
+    private UserService userService;
+
+    @Mock
     private Authentication authentication;
 
     @Mock
@@ -82,6 +85,9 @@ public class AccountServiceTest {
         Long testAccountId = 1L;
         when(accountRepository.findById(testAccountId)).thenReturn(Optional.of(testAccount));
         
+        // Mock PIN verification
+        when(userService.verifyPin("1234567890123", "123456")).thenReturn(true);
+        
         // Convert test dates to Unix timestamps (January 2024)
         long since = LocalDateTime.of(2024, 1, 1, 0, 0).toEpochSecond(java.time.ZoneOffset.UTC);
         long until = LocalDateTime.of(2024, 1, 31, 23, 59, 59).toEpochSecond(java.time.ZoneOffset.UTC);
@@ -91,7 +97,7 @@ public class AccountServiceTest {
                 .thenReturn(Arrays.asList(testTransaction1, testTransaction2));
 
         // Execute
-        InputStream result = accountService.generateStatement(testAccountId, since, until);
+        InputStream result = accountService.generateStatement(testAccountId, since, until, "123456");
 
         // Verify
         assertNotNull(result);
@@ -112,9 +118,12 @@ public class AccountServiceTest {
         when(authentication.getPrincipal()).thenReturn(adminDetails);
         SecurityContextHolder.setContext(securityContext);
 
+        // Mock PIN verification (should pass first, then fail on role check)
+        when(userService.verifyPin(adminDetails.getCid(), "123456")).thenReturn(true);
+
         // Execute and verify
         assertThrows(AccessDeniedException.class, () -> {
-            accountService.generateStatement(1L, 1640995200L, 1643673600L);
+            accountService.generateStatement(1L, 1640995200L, 1643673600L, "123456");
         });
     }
 
@@ -125,12 +134,15 @@ public class AccountServiceTest {
         when(authentication.getPrincipal()).thenReturn(userDetails);
         SecurityContextHolder.setContext(securityContext);
 
+        // Mock PIN verification (should pass first)
+        when(userService.verifyPin("1234567890123", "123456")).thenReturn(true);
+
         // Mock repository call to return empty
         when(accountRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Execute and verify
         assertThrows(AccountNotFoundException.class, () -> {
-            accountService.generateStatement(999L, 1640995200L, 1643673600L);
+            accountService.generateStatement(999L, 1640995200L, 1643673600L, "123456");
         });
     }
 
@@ -141,12 +153,12 @@ public class AccountServiceTest {
         when(authentication.getPrincipal()).thenReturn(userDetails);
         SecurityContextHolder.setContext(securityContext);
 
-        // Mock repository call for account lookup
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(testAccount));
+        // Mock PIN verification (should pass first)
+        when(userService.verifyPin("1234567890123", "123456")).thenReturn(true);
 
         // Execute and verify - since >= until
         assertThrows(IllegalArgumentException.class, () -> {
-            accountService.generateStatement(1L, 1643673600L, 1640995200L);
+            accountService.generateStatement(1L, 1643673600L, 1640995200L, "123456");
         });
     }
 
@@ -157,12 +169,12 @@ public class AccountServiceTest {
         when(authentication.getPrincipal()).thenReturn(userDetails);
         SecurityContextHolder.setContext(securityContext);
 
-        // Mock repository call for account lookup
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(testAccount));
+        // Mock PIN verification (should pass first)
+        when(userService.verifyPin("1234567890123", "123456")).thenReturn(true);
 
         // Execute and verify - negative timestamps
         assertThrows(IllegalArgumentException.class, () -> {
-            accountService.generateStatement(1L, -1L, 1643673600L);
+            accountService.generateStatement(1L, -1L, 1643673600L, "123456");
         });
     }
 
@@ -177,12 +189,31 @@ public class AccountServiceTest {
         when(authentication.getPrincipal()).thenReturn(differentDetails);
         SecurityContextHolder.setContext(securityContext);
 
+        // Mock PIN verification (should pass first)
+        when(userService.verifyPin("9876543210987", "123456")).thenReturn(true);
+
         // Mock repository call
         when(accountRepository.findById(1L)).thenReturn(Optional.of(testAccount));
 
         // Execute and verify
         assertThrows(AccessDeniedException.class, () -> {
-            accountService.generateStatement(1L, 1640995200L, 1643673600L);
+            accountService.generateStatement(1L, 1640995200L, 1643673600L, "123456");
+        });
+    }
+
+    @Test
+    public void testGenerateStatement_InvalidPin() {
+        // Mock security context
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
+        SecurityContextHolder.setContext(securityContext);
+
+        // Mock PIN verification to fail (should fail first, before any other checks)
+        when(userService.verifyPin("1234567890123", "654321")).thenReturn(false);
+
+        // Execute and verify - should fail on PIN verification before any other validations
+        assertThrows(com.d01.simplebank.exception.InvalidPinException.class, () -> {
+            accountService.generateStatement(1L, 1640995200L, 1643673600L, "654321");
         });
     }
 } 
