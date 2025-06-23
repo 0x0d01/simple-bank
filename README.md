@@ -166,8 +166,8 @@ curl -X GET http://localhost:3000/accounts/0000001 \
   "cid": "1234567890123",
   "nameTh": "จอห์น โด",
   "nameEn": "John Doe",
-  "createdDate": "2024-01-15T10:30:00",
-  "updatedDate": "2024-01-15T10:30:00"
+  "createdDate": "2024-01-15 10:30:00",
+  "updatedDate": "2024-01-15 10:30:00"
 }
 ```
 
@@ -309,7 +309,7 @@ Date,Time,Code,Channel,Debit/Credit,Balance,Remark
 ## Running the Application
 
 1. Start the MySQL database
-2. Run the application with: `./mvnw spring-boot:run`
+2. Run the application with: `mvn spring-boot:run`
 3. The API will be available at `http://localhost:3000`
 
 ## Database Setup
