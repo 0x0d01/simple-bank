@@ -20,11 +20,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
     depends_on:
       - mysql
-    command: mvn spring-boot:run
 
 volumes:
   mysql-data:
