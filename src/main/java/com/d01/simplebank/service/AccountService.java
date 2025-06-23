@@ -4,11 +4,13 @@ import com.d01.simplebank.dto.AccountResponse;
 import com.d01.simplebank.dto.CreateAccountRequest;
 import com.d01.simplebank.entity.Account;
 import com.d01.simplebank.entity.Transaction;
+import com.d01.simplebank.entity.User;
 import com.d01.simplebank.exception.AccessDeniedException;
 import com.d01.simplebank.exception.AccountNotFoundException;
 import com.d01.simplebank.exception.InvalidPinException;
 import com.d01.simplebank.repository.AccountRepository;
 import com.d01.simplebank.repository.TransactionRepository;
+import com.d01.simplebank.repository.UserRepository;
 import com.d01.simplebank.security.CustomUserDetails;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class AccountService {
@@ -35,6 +38,12 @@ public class AccountService {
     @Autowired
     private UserService userService;
     
+    @Autowired
+    private TransactionService transactionService;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
     /**
      * Create a new account - Only ADMIN users can create accounts
      * @param request the account creation request
@@ -46,6 +55,26 @@ public class AccountService {
         Account account = new Account(request.getCid(), request.getNameTh(), request.getNameEn());
         
         Account savedAccount = accountRepository.save(account);
+        
+        // Process initial deposit if amount is provided
+        if (request.getAmount() != null && request.getAmount() > 0) {
+            // Get current user for the deposit transaction
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            
+            User createdBy = userRepository.findByEmail(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Generate a unique transaction ID for the initial deposit
+            String transactionId = "initial-deposit-" + UUID.randomUUID().toString();
+            
+            // Format account number as 7-digit zero-padded string
+            String accountNo = String.format("%07d", savedAccount.getId());
+            
+            // Process the initial deposit
+            transactionService.processDeposit(transactionId, accountNo, request.getAmount(), createdBy);
+        }
+        
         return new AccountResponse(savedAccount);
     }
     

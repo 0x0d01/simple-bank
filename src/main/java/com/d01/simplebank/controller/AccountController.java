@@ -24,7 +24,7 @@ public class AccountController {
     /**
      * Create a new account
      * Only ADMIN users can create accounts
-     * @param request the account creation request
+     * @param request the account creation request (amount field is optional for initial deposit)
      * @return ResponseEntity with created account details
      */
     @PostMapping

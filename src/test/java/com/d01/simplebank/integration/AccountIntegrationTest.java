@@ -23,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -440,5 +441,55 @@ public class AccountIntegrationTest {
         assertTrue(accountNames.contains("บัญชีที่ 1"), "Should contain first account name");
         assertTrue(accountNames.contains("บัญชีที่ 2"), "Should contain second account name");
         assertTrue(accountNames.contains("บัญชีที่ 3"), "Should contain third account name");
+    }
+
+    @Test
+    public void testCreateAccount_WithInitialDeposit_Success() throws Exception {
+        // Create admin user in database
+        User adminUser = new User("admin@test.com", "password", "ADMIN");
+        adminUser.setId("admin-test-123");
+        adminUser = userRepository.save(adminUser);
+        
+        // Set up ADMIN authentication for this test
+        CustomUserDetails adminDetails = new CustomUserDetails(adminUser);
+        UsernamePasswordAuthenticationToken adminAuth = new UsernamePasswordAuthenticationToken(
+            adminDetails, null, adminDetails.getAuthorities());
+        adminAuth.setDetails(adminDetails);
+        SecurityContextHolder.getContext().setAuthentication(adminAuth);
+
+        // Create account request with initial deposit using a unique CID
+        CreateAccountRequest request = new CreateAccountRequest(
+                "9999999999999", // Unique CID for this test
+                "ทดสอบ",
+                "Test User",
+                10000 // 100.00 initial deposit
+        );
+
+        // Perform POST request
+        mockMvc.perform(post("/accounts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.cid").value("9999999999999"))
+                .andExpect(jsonPath("$.nameTh").value("ทดสอบ"))
+                .andExpect(jsonPath("$.nameEn").value("Test User"));
+
+        // Verify that the account was created
+        List<Account> accounts = accountRepository.findByCid("9999999999999");
+        assertEquals(1, accounts.size());
+        
+        Account createdAccount = accounts.get(0);
+        
+        // Verify that a deposit transaction was created
+        List<Transaction> transactions = transactionRepository.findByAccountId(createdAccount.getId());
+        assertEquals(1, transactions.size());
+        
+        Transaction depositTransaction = transactions.get(0);
+        assertEquals(10000, depositTransaction.getAmount());
+        assertEquals("A0", depositTransaction.getType());
+        assertEquals("OTC", depositTransaction.getChannel());
+        assertTrue(depositTransaction.getRemark().contains("Deposit"));
     }
 } 

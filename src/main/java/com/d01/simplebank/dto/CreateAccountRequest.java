@@ -1,5 +1,6 @@
 package com.d01.simplebank.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
@@ -15,6 +16,9 @@ public class CreateAccountRequest {
     @NotBlank(message = "English name is required")
     private String nameEn;
     
+    @Min(value = 1, message = "Amount must be 1 or more if provided")
+    private Integer amount; // Optional initial deposit amount
+    
     // Default constructor
     public CreateAccountRequest() {}
     
@@ -23,6 +27,14 @@ public class CreateAccountRequest {
         this.cid = cid;
         this.nameTh = nameTh;
         this.nameEn = nameEn;
+    }
+    
+    // Constructor with all fields including amount
+    public CreateAccountRequest(String cid, String nameTh, String nameEn, Integer amount) {
+        this.cid = cid;
+        this.nameTh = nameTh;
+        this.nameEn = nameEn;
+        this.amount = amount;
     }
     
     // Getters and Setters
@@ -48,5 +60,13 @@ public class CreateAccountRequest {
     
     public void setNameEn(String nameEn) {
         this.nameEn = nameEn;
+    }
+    
+    public Integer getAmount() {
+        return amount;
+    }
+    
+    public void setAmount(Integer amount) {
+        this.amount = amount;
     }
 } 
