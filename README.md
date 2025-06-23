@@ -2,6 +2,12 @@
 
 A RESTful banking API built with Spring Boot that provides user management, account operations, and transaction processing capabilities.
 
+## Running via Docker Compose
+
+```sh
+docker compose up -d
+```
+
 ## Base URL
 ```
 http://localhost:3000
