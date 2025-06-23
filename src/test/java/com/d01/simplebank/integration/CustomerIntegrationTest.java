@@ -84,6 +84,96 @@ public class CustomerIntegrationTest {
         assertNotNull(userResponse.getId());
         assertNotNull(userResponse.getCreatedDate());
         assertNotNull(userResponse.getUpdatedDate());
+        assertNull(userResponse.getCid());
+        assertNull(userResponse.getNameTh());
+        assertNull(userResponse.getNameEn());
+    }
+    
+    @Test
+    public void testCreateAdminUserWithValidCustomerData_ShouldSucceed() {
+        // Given
+        CreateUserRequest request = new CreateUserRequest();
+        request.setEmail("admin3@example.com");
+        request.setPassword("password123");
+        request.setRole("ADMIN");
+        request.setCid("1234567890124");
+        request.setNameTh("แอดมิน ทดสอบ");
+        request.setNameEn("Admin Test");
+        request.setPin("123456");
+        
+        // When
+        UserResponse userResponse = userService.createUser(request);
+        
+        // Then
+        assertNotNull(userResponse);
+        assertEquals("admin3@example.com", userResponse.getEmail());
+        assertEquals("ADMIN", userResponse.getRole());
+        assertEquals("1234567890124", userResponse.getCid());
+        assertEquals("แอดมิน ทดสอบ", userResponse.getNameTh());
+        assertEquals("Admin Test", userResponse.getNameEn());
+        assertNotNull(userResponse.getId());
+        assertNotNull(userResponse.getCreatedDate());
+        assertNotNull(userResponse.getUpdatedDate());
+    }
+    
+    @Test
+    public void testCreateAdminUserWithPartialCustomerData_ShouldSucceed() {
+        // Given
+        CreateUserRequest request = new CreateUserRequest();
+        request.setEmail("admin4@example.com");
+        request.setPassword("password123");
+        request.setRole("ADMIN");
+        request.setCid("1234567890125");
+        request.setNameTh("แอดมิน บางส่วน");
+        // Missing nameEn and pin - should be allowed for ADMIN
+        
+        // When
+        UserResponse userResponse = userService.createUser(request);
+        
+        // Then
+        assertNotNull(userResponse);
+        assertEquals("admin4@example.com", userResponse.getEmail());
+        assertEquals("ADMIN", userResponse.getRole());
+        assertEquals("1234567890125", userResponse.getCid());
+        assertEquals("แอดมิน บางส่วน", userResponse.getNameTh());
+        assertNull(userResponse.getNameEn());
+        assertNull(userResponse.getPin());
+    }
+    
+    @Test
+    public void testCreateAdminUserWithInvalidCID_ShouldThrowException() {
+        // Given
+        CreateUserRequest request = new CreateUserRequest();
+        request.setEmail("admin5@example.com");
+        request.setPassword("password123");
+        request.setRole("ADMIN");
+        request.setCid("123456"); // Invalid CID (less than 13 digits)
+        request.setNameTh("แอดมิน ทดสอบ");
+        request.setNameEn("Admin Test");
+        request.setPin("123456");
+        
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.createUser(request);
+        });
+    }
+    
+    @Test
+    public void testCreateAdminUserWithInvalidPIN_ShouldThrowException() {
+        // Given
+        CreateUserRequest request = new CreateUserRequest();
+        request.setEmail("admin6@example.com");
+        request.setPassword("password123");
+        request.setRole("ADMIN");
+        request.setCid("1234567890126");
+        request.setNameTh("แอดมิน ทดสอบ");
+        request.setNameEn("Admin Test");
+        request.setPin("123"); // Invalid PIN (less than 6 digits)
+        
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.createUser(request);
+        });
     }
     
     @Test

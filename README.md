@@ -42,14 +42,27 @@ curl -X POST http://localhost:3000/users \
   }'
 ```
 
+**Example for ADMIN user (customer fields optional):**
+```bash
+curl -X POST http://localhost:3000/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "password123",
+    "role": "ADMIN"
+  }'
+```
+
 #### Request Fields
 - `email` (string, required): User's email address
 - `password` (string, required): User's password
 - `role` (string, optional): User role - "ADMIN" or "USER" (defaults to "USER")
-- `cid` (string, optional): Customer ID - exactly 13 numeric digits (required for role=USER)
-- `nameTh` (string, optional): Customer name in Thai (required for role=USER)
-- `nameEn` (string, optional): Customer name in English (required for role=USER)
-- `pin` (string, optional): 6-digit PIN for transactions (required for role=USER)
+- `cid` (string, optional): Customer ID - exactly 13 numeric digits (required for role=USER, optional for role=ADMIN)
+- `nameTh` (string, optional): Customer name in Thai (required for role=USER, optional for role=ADMIN)
+- `nameEn` (string, optional): Customer name in English (required for role=USER, optional for role=ADMIN)
+- `pin` (string, optional): 6-digit PIN for transactions (required for role=USER, optional for role=ADMIN)
+
+**Note:** For `role=USER`, all customer fields (`cid`, `nameTh`, `nameEn`, `pin`) are required. For `role=ADMIN`, these fields are optional but will be validated if provided.
 
 #### Response
 ```json

@@ -27,8 +27,9 @@ public class UserService {
             throw new UserAlreadyExistsException("User with email " + request.getEmail() + " already exists");
         }
         
-        // Validate that USER role users must provide customer data
+        // Validate customer data based on role
         if ("USER".equals(request.getRole())) {
+            // For USER role, customer data is required
             if (request.getCid() == null || request.getNameTh() == null || 
                 request.getNameEn() == null || request.getPin() == null) {
                 throw new IllegalArgumentException("Customer data (cid, nameTh, nameEn, pin) is required for USER role");
@@ -47,6 +48,26 @@ public class UserService {
             // Check if customer already exists
             if (userRepository.existsByCid(request.getCid())) {
                 throw new UserAlreadyExistsException("User with CID " + request.getCid() + " already exists");
+            }
+        } else if ("ADMIN".equals(request.getRole())) {
+            // For ADMIN role, customer data is optional but validate if provided
+            if (request.getCid() != null) {
+                // Validate CID format (13 digits) if provided
+                if (!request.getCid().matches("\\d{13}")) {
+                    throw new IllegalArgumentException("CID must be exactly 13 numeric digits");
+                }
+                
+                // Check if customer already exists
+                if (userRepository.existsByCid(request.getCid())) {
+                    throw new UserAlreadyExistsException("User with CID " + request.getCid() + " already exists");
+                }
+            }
+            
+            if (request.getPin() != null) {
+                // Validate PIN format (6 digits) if provided
+                if (!request.getPin().matches("\\d{6}")) {
+                    throw new IllegalArgumentException("PIN must be exactly 6 numeric digits");
+                }
             }
         }
         
