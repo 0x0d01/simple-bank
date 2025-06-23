@@ -5,7 +5,6 @@ import com.d01.simplebank.dto.TransferRequest;
 import com.d01.simplebank.entity.Account;
 import com.d01.simplebank.entity.User;
 import com.d01.simplebank.repository.AccountRepository;
-import com.d01.simplebank.repository.TransactionRepository;
 import com.d01.simplebank.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,9 +41,6 @@ public class TransferIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private TransactionRepository transactionRepository;
 
     private MockMvc mockMvc;
     private Account senderAccount;

@@ -115,7 +115,7 @@ public class TransactionService {
         
         // Find the account by account number
         Long accountId = Long.parseLong(accountNo);
-        Account account = accountRepository.findById(accountId)
+        accountRepository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found with account number: " + accountNo));
         
         LocalDateTime now = LocalDateTime.now();
