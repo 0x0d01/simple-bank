@@ -66,7 +66,7 @@ public class AccountService {
                     .orElseThrow(() -> new RuntimeException("User not found"));
             
             // Generate a unique transaction ID for the initial deposit
-            String transactionId = "initial-deposit-" + UUID.randomUUID().toString();
+            String transactionId = UUID.randomUUID().toString();
             
             // Format account number as 7-digit zero-padded string
             String accountNo = String.format("%07d", savedAccount.getId());
