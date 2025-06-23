@@ -4,13 +4,15 @@ import com.d01.simplebank.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
     
     /**
-     * Check if account exists by CID
+     * Find all accounts by CID
      * @param cid the 13-digit CID
-     * @return true if account exists, false otherwise
+     * @return list of accounts with the given CID
      */
-    boolean existsByCid(String cid);
+    List<Account> findByCid(String cid);
 } 

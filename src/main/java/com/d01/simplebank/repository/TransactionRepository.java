@@ -48,7 +48,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
      * @param endDate the end date
      * @return list of transactions in the date range
      */
-    List<Transaction> findByAccountIdAndTransactionDateBetweenOrderByTransactionDateDesc(
+    List<Transaction> findByAccountIdAndTransactionDateBetweenOrderByTransactionDateAsc(
             Long accountId, LocalDateTime startDate, LocalDateTime endDate);
     
     /**

@@ -15,7 +15,7 @@ public class Account {
     @Column(name = "id", nullable = false, unique = true)
     private Long id; // 7-numeric digits, auto incremental
     
-    @Column(name = "cid", unique = true, nullable = false, length = 13)
+    @Column(name = "cid", nullable = false, length = 13)
     private String cid; // 13-digit numeric string
     
     @Column(name = "name_th", nullable = false, columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")

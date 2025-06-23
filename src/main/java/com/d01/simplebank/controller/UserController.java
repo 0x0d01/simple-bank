@@ -39,13 +39,13 @@ public class UserController {
         try {
             // Get current authenticated user
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            CustomUserDetails currentUserDetails = (CustomUserDetails)authentication.getDetails();
+            CustomUserDetails currentUserDetails = (CustomUserDetails)authentication.getPrincipal();
             
             // Check if user has ADMIN role
             boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
             
             // If not admin, check if current user is the owner
-            if (!isAdmin && currentUserDetails.getId().equals(id)) {
+            if (!isAdmin && !currentUserDetails.getId().equals(id)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 

@@ -43,7 +43,7 @@ public class TransactionController {
     public ResponseEntity<TransactionResponse> createTransaction(@Valid @RequestBody CreateTransactionRequest request) {
         // Get current user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails currentUserDetails = (CustomUserDetails)authentication.getDetails();
+        CustomUserDetails currentUserDetails = (CustomUserDetails)authentication.getPrincipal();
         
         // Find the account
         Account account = accountRepository.findById(request.getAccountId())

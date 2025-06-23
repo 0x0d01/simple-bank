@@ -5,14 +5,12 @@ import com.d01.simplebank.dto.CreateAccountRequest;
 import com.d01.simplebank.entity.Account;
 import com.d01.simplebank.entity.Transaction;
 import com.d01.simplebank.exception.AccessDeniedException;
-import com.d01.simplebank.exception.AccountAlreadyExistsException;
 import com.d01.simplebank.exception.AccountNotFoundException;
 import com.d01.simplebank.repository.AccountRepository;
 import com.d01.simplebank.repository.TransactionRepository;
 import com.d01.simplebank.security.CustomUserDetails;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -40,25 +38,11 @@ public class AccountService {
      */
     @Transactional
     public AccountResponse createAccount(CreateAccountRequest request) {
-        // Check if account already exists with the same CID
-        if (accountRepository.existsByCid(request.getCid())) {
-            throw new AccountAlreadyExistsException("Account with CID " + request.getCid() + " already exists");
-        }
-        
         // Create new account
         Account account = new Account(request.getCid(), request.getNameTh(), request.getNameEn());
         
-        try {
-            Account savedAccount = accountRepository.save(account);
-            return new AccountResponse(savedAccount);
-        } catch (DataIntegrityViolationException e) {
-            // Handle concurrent creation attempts
-            String errorMessage = e.getMessage();
-            if (errorMessage.contains("Duplicate entry")) {
-                throw new AccountAlreadyExistsException("Account with CID " + request.getCid() + " already exists", e);
-            }
-            throw e;
-        }
+        Account savedAccount = accountRepository.save(account);
+        return new AccountResponse(savedAccount);
     }
     
     /**
@@ -71,7 +55,7 @@ public class AccountService {
     public AccountResponse getAccountById(Long id) {
         // Get current user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails currentUserDetails = (CustomUserDetails)authentication.getDetails();
+        CustomUserDetails currentUserDetails = (CustomUserDetails)authentication.getPrincipal();
         
         // Find the account
         Account account = accountRepository.findById(id)
@@ -104,7 +88,7 @@ public class AccountService {
     public InputStream generateStatement(Long accountId, long since, long until) {
         // Get current user
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        CustomUserDetails currentUserDetails = (CustomUserDetails)authentication.getDetails();
+        CustomUserDetails currentUserDetails = (CustomUserDetails)authentication.getPrincipal();
         
         // Check if user has USER role
         if (!"USER".equals(currentUserDetails.getRole())) {
@@ -134,7 +118,7 @@ public class AccountService {
         
         // Get transactions for the specified date range
         List<Transaction> transactions = transactionRepository
-                .findByAccountIdAndTransactionDateBetweenOrderByTransactionDateDesc(accountId, startDate, endDate);
+                .findByAccountIdAndTransactionDateBetweenOrderByTransactionDateAsc(accountId, startDate, endDate);
         
         // Generate CSV content
         StringBuilder csvContent = new StringBuilder();

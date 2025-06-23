@@ -23,10 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -137,9 +140,54 @@ public class AccountIntegrationTest {
                 .andExpect(jsonPath("$.cid").value("1234567890124"))
                 .andExpect(jsonPath("$.nameTh").value("บัญชีทดสอบ"))
                 .andExpect(jsonPath("$.nameEn").value("Test Account"))
-                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").isString())
+                .andExpect(jsonPath("$.id").value(org.hamcrest.Matchers.matchesPattern("\\d{7}")))
                 .andExpect(jsonPath("$.createdDate").exists())
                 .andExpect(jsonPath("$.updatedDate").exists());
+    }
+
+    @Test
+    public void testCreateAccount_DuplicateCid_Allowed() throws Exception {
+        // Set up ADMIN authentication for this test
+        User adminUser = new User("admin@example.com", "password", "ADMIN");
+        adminUser.setId("admin-123");
+        CustomUserDetails adminDetails = new CustomUserDetails(adminUser);
+        UsernamePasswordAuthenticationToken adminAuth = new UsernamePasswordAuthenticationToken(
+            adminDetails, null, adminDetails.getAuthorities());
+        adminAuth.setDetails(adminDetails);
+        SecurityContextHolder.getContext().setAuthentication(adminAuth);
+
+        // Given - Create first account
+        CreateAccountRequest request1 = new CreateAccountRequest(
+                "1234567890125", // Same CID
+                "บัญชีแรก",
+                "First Account"
+        );
+
+        // When & Then - First account should be created successfully
+        mockMvc.perform(post("/accounts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request1)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cid").value("1234567890125"))
+                .andExpect(jsonPath("$.nameTh").value("บัญชีแรก"))
+                .andExpect(jsonPath("$.nameEn").value("First Account"));
+
+        // Given - Create second account with same CID
+        CreateAccountRequest request2 = new CreateAccountRequest(
+                "1234567890125", // Same CID as first account
+                "บัญชีที่สอง",
+                "Second Account"
+        );
+
+        // When & Then - Second account should also be created successfully
+        mockMvc.perform(post("/accounts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request2)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.cid").value("1234567890125"))
+                .andExpect(jsonPath("$.nameTh").value("บัญชีที่สอง"))
+                .andExpect(jsonPath("$.nameEn").value("Second Account"));
     }
 
     @Test
@@ -159,6 +207,7 @@ public class AccountIntegrationTest {
     }
 
     @Test
+    @Transactional
     public void testCreateAccount_InvalidCid_BadRequest() throws Exception {
         // Set up ADMIN authentication for this test
         User adminUser = new User("admin@example.com", "password", "ADMIN");
@@ -239,7 +288,12 @@ public class AccountIntegrationTest {
         // When & Then - Test with USER role
         String accountIdStr = String.format("%07d", testAccount.getId());
         mockMvc.perform(get("/accounts/" + accountIdStr))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isString())
+                .andExpect(jsonPath("$.id").value(accountIdStr))
+                .andExpect(jsonPath("$.cid").value(testAccount.getCid()))
+                .andExpect(jsonPath("$.nameTh").value(testAccount.getNameTh()))
+                .andExpect(jsonPath("$.nameEn").value(testAccount.getNameEn()));
     }
 
     @Test
@@ -307,5 +361,58 @@ public class AccountIntegrationTest {
         mockMvc.perform(get("/accounts/" + accountIdStr + "/statement")
                 .param("since", "1640995200"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testMultipleAccountsWithSameCid_CanBeRetrieved() throws Exception {
+        // Set up ADMIN authentication for this test
+        User adminUser = new User("admin@example.com", "password", "ADMIN");
+        adminUser.setId("admin-123");
+        CustomUserDetails adminDetails = new CustomUserDetails(adminUser);
+        UsernamePasswordAuthenticationToken adminAuth = new UsernamePasswordAuthenticationToken(
+            adminDetails, null, adminDetails.getAuthorities());
+        adminAuth.setDetails(adminDetails);
+        SecurityContextHolder.getContext().setAuthentication(adminAuth);
+
+        String duplicateCid = "1234567890126";
+
+        // Create multiple accounts with the same CID
+        CreateAccountRequest request1 = new CreateAccountRequest(duplicateCid, "บัญชีที่ 1", "Account 1");
+        CreateAccountRequest request2 = new CreateAccountRequest(duplicateCid, "บัญชีที่ 2", "Account 2");
+        CreateAccountRequest request3 = new CreateAccountRequest(duplicateCid, "บัญชีที่ 3", "Account 3");
+
+        // Create all three accounts
+        mockMvc.perform(post("/accounts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request1)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/accounts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request2)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/accounts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request3)))
+                .andExpect(status().isCreated());
+
+        // Verify that all three accounts exist in the database
+        List<Account> accountsWithSameCid = accountRepository.findByCid(duplicateCid);
+        assertEquals(3, accountsWithSameCid.size(), "Should have 3 accounts with the same CID");
+        
+        // Verify that all accounts have the same CID but different names
+        for (Account account : accountsWithSameCid) {
+            assertEquals(duplicateCid, account.getCid(), "All accounts should have the same CID");
+        }
+        
+        // Verify that account names are different
+        List<String> accountNames = accountsWithSameCid.stream()
+                .map(Account::getNameTh)
+                .toList();
+        assertEquals(3, accountNames.size(), "Should have 3 different account names");
+        assertTrue(accountNames.contains("บัญชีที่ 1"), "Should contain first account name");
+        assertTrue(accountNames.contains("บัญชีที่ 2"), "Should contain second account name");
+        assertTrue(accountNames.contains("บัญชีที่ 3"), "Should contain third account name");
     }
 } 

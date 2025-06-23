@@ -41,10 +41,14 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/users").permitAll()
                 .requestMatchers("/users/**").hasAnyRole("ADMIN", "USER") // ADMIN and USER can access user details
                 .requestMatchers("/customers/**").hasRole("USER") // USER can access customer details
                 .requestMatchers("/accounts").hasRole("ADMIN") // Only ADMIN can create accounts
                 .requestMatchers("/accounts/**").hasRole("USER") // USER can access account details
+                .requestMatchers("/accounts/{id}/statement").hasRole("USER") // USER can access account statement
+                .requestMatchers("/tx/transfer").hasRole("USER") // USER can access transfer endpoint
+                .requestMatchers("/tx/deposit").hasRole("ADMIN") // ADMIN can access deposit endpoint
                 .anyRequest().denyAll()
             )
             .authenticationProvider(authenticationProvider())

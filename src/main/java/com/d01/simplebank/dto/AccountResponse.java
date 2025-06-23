@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 public class AccountResponse {
     
-    private Long id;
+    private String id;
     private String cid;
     private String nameTh;
     private String nameEn;
@@ -23,7 +23,7 @@ public class AccountResponse {
     
     // Constructor from Account entity
     public AccountResponse(Account account) {
-        this.id = account.getId();
+        this.id = String.format("%07d", account.getId());
         this.cid = account.getCid();
         this.nameTh = account.getNameTh();
         this.nameEn = account.getNameEn();
@@ -33,7 +33,7 @@ public class AccountResponse {
     
     // Constructor with fields
     public AccountResponse(Long id, String cid, String nameTh, String nameEn, LocalDateTime createdDate, LocalDateTime updatedDate) {
-        this.id = id;
+        this.id = String.format("%07d", id);
         this.cid = cid;
         this.nameTh = nameTh;
         this.nameEn = nameEn;
@@ -42,11 +42,11 @@ public class AccountResponse {
     }
     
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
     
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
     

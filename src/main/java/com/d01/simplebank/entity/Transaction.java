@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class Transaction {
     
     @Id
-    @UuidGenerator
+    @Column(name = "id", nullable = false, unique = true)
     private String id;
     
     @ManyToOne(fetch = FetchType.LAZY)

@@ -36,6 +36,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
     
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<Map<String, String>> handleInsufficientFunds(InsufficientFundsException e) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Insufficient funds");
+        errorResponse.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+    
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException e) {
         Map<String, String> errorResponse = new HashMap<>();
@@ -57,6 +65,14 @@ public class GlobalExceptionHandler {
         Map<String, String> errorResponse = new HashMap<>();
         errorResponse.put("error", "Bad request");
         errorResponse.put("message", "Invalid JSON format");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+    
+    @ExceptionHandler(DuplicateTransactionException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateTransaction(DuplicateTransactionException e) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", "Duplicate transaction");
+        errorResponse.put("message", e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
     

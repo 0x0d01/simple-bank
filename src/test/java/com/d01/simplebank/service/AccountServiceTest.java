@@ -75,7 +75,7 @@ public class AccountServiceTest {
     public void testGenerateStatement_Success() throws Exception {
         // Mock security context
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getDetails()).thenReturn(userDetails);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
         SecurityContextHolder.setContext(securityContext);
 
         // Mock repository calls - use a test ID since we can't predict the generated ID
@@ -86,7 +86,7 @@ public class AccountServiceTest {
         long since = LocalDateTime.of(2024, 1, 1, 0, 0).toEpochSecond(java.time.ZoneOffset.UTC);
         long until = LocalDateTime.of(2024, 1, 31, 23, 59, 59).toEpochSecond(java.time.ZoneOffset.UTC);
         
-        when(transactionRepository.findByAccountIdAndTransactionDateBetweenOrderByTransactionDateDesc(testAccountId, 
+        when(transactionRepository.findByAccountIdAndTransactionDateBetweenOrderByTransactionDateAsc(testAccountId, 
                 LocalDateTime.of(2024, 1, 1, 0, 0), LocalDateTime.of(2024, 1, 31, 23, 59, 59)))
                 .thenReturn(Arrays.asList(testTransaction1, testTransaction2));
 
@@ -109,7 +109,7 @@ public class AccountServiceTest {
         
         // Mock security context with ADMIN role
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getDetails()).thenReturn(adminDetails);
+        when(authentication.getPrincipal()).thenReturn(adminDetails);
         SecurityContextHolder.setContext(securityContext);
 
         // Execute and verify
@@ -122,7 +122,7 @@ public class AccountServiceTest {
     public void testGenerateStatement_AccountNotFound() {
         // Mock security context
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getDetails()).thenReturn(userDetails);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
         SecurityContextHolder.setContext(securityContext);
 
         // Mock repository call to return empty
@@ -138,7 +138,7 @@ public class AccountServiceTest {
     public void testGenerateStatement_InvalidTimestamps() {
         // Mock security context
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getDetails()).thenReturn(userDetails);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
         SecurityContextHolder.setContext(securityContext);
 
         // Mock repository call for account lookup
@@ -154,7 +154,7 @@ public class AccountServiceTest {
     public void testGenerateStatement_NegativeTimestamps() {
         // Mock security context
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getDetails()).thenReturn(userDetails);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
         SecurityContextHolder.setContext(securityContext);
 
         // Mock repository call for account lookup
@@ -174,7 +174,7 @@ public class AccountServiceTest {
         
         // Mock security context
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getDetails()).thenReturn(differentDetails);
+        when(authentication.getPrincipal()).thenReturn(differentDetails);
         SecurityContextHolder.setContext(securityContext);
 
         // Mock repository call
