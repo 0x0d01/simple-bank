@@ -8,6 +8,12 @@ A RESTful banking API built with Spring Boot that provides user management, acco
 docker compose up -d
 ```
 
+## Running Test
+
+```sh
+mvn test
+```
+
 ## Base URL
 ```
 http://localhost:3000
