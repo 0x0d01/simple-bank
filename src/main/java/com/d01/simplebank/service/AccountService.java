@@ -115,8 +115,8 @@ public class AccountService {
      * Only USER role and account owner can access this
      * PIN verification is required
      * @param accountId the account ID
-     * @param since the start timestamp (Unix timestamp in seconds)
-     * @param until the end timestamp (Unix timestamp in seconds)
+     * @param since the start timestamp (Unix timestamp in milliseconds)
+     * @param until the end timestamp (Unix timestamp in milliseconds)
      * @param pin the user's PIN for verification
      * @return InputStream containing CSV data
      */
@@ -153,9 +153,9 @@ public class AccountService {
             throw new AccessDeniedException("Access denied: Only account owner can generate statements");
         }
         
-        // Convert Unix timestamps to LocalDateTime
-        LocalDateTime startDate = LocalDateTime.ofEpochSecond(since, 0, java.time.ZoneOffset.UTC);
-        LocalDateTime endDate = LocalDateTime.ofEpochSecond(until, 0, java.time.ZoneOffset.UTC);
+        // Convert Unix timestamps from milliseconds to seconds, then to LocalDateTime
+        LocalDateTime startDate = LocalDateTime.ofEpochSecond(since / 1000, 0, java.time.ZoneOffset.UTC);
+        LocalDateTime endDate = LocalDateTime.ofEpochSecond(until / 1000, 0, java.time.ZoneOffset.UTC);
         
         // Get transactions for the specified date range
         List<Transaction> transactions = transactionRepository

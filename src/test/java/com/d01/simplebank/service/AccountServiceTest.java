@@ -88,9 +88,9 @@ public class AccountServiceTest {
         // Mock PIN verification
         when(userService.verifyPin("1234567890123", "123456")).thenReturn(true);
         
-        // Convert test dates to Unix timestamps (January 2024)
-        long since = LocalDateTime.of(2024, 1, 1, 0, 0).toEpochSecond(java.time.ZoneOffset.UTC);
-        long until = LocalDateTime.of(2024, 1, 31, 23, 59, 59).toEpochSecond(java.time.ZoneOffset.UTC);
+        // Convert test dates to Unix timestamps in milliseconds (January 2024)
+        long since = LocalDateTime.of(2024, 1, 1, 0, 0).toEpochSecond(java.time.ZoneOffset.UTC) * 1000;
+        long until = LocalDateTime.of(2024, 1, 31, 23, 59, 59).toEpochSecond(java.time.ZoneOffset.UTC) * 1000;
         
         when(transactionRepository.findByAccountIdAndTransactionDateBetweenOrderByTransactionDateAsc(testAccountId, 
                 LocalDateTime.of(2024, 1, 1, 0, 0), LocalDateTime.of(2024, 1, 31, 23, 59, 59)))
@@ -123,7 +123,7 @@ public class AccountServiceTest {
 
         // Execute and verify
         assertThrows(AccessDeniedException.class, () -> {
-            accountService.generateStatement(1L, 1640995200L, 1643673600L, "123456");
+            accountService.generateStatement(1L, 1640995200000L, 1643673600000L, "123456");
         });
     }
 
@@ -142,7 +142,7 @@ public class AccountServiceTest {
 
         // Execute and verify
         assertThrows(AccountNotFoundException.class, () -> {
-            accountService.generateStatement(999L, 1640995200L, 1643673600L, "123456");
+            accountService.generateStatement(999L, 1640995200000L, 1643673600000L, "123456");
         });
     }
 
@@ -158,7 +158,7 @@ public class AccountServiceTest {
 
         // Execute and verify - since >= until
         assertThrows(IllegalArgumentException.class, () -> {
-            accountService.generateStatement(1L, 1643673600L, 1640995200L, "123456");
+            accountService.generateStatement(1L, 1643673600000L, 1640995200000L, "123456");
         });
     }
 
@@ -174,7 +174,7 @@ public class AccountServiceTest {
 
         // Execute and verify - negative timestamps
         assertThrows(IllegalArgumentException.class, () -> {
-            accountService.generateStatement(1L, -1L, 1643673600L, "123456");
+            accountService.generateStatement(1L, -1L, 1643673600000L, "123456");
         });
     }
 
@@ -197,7 +197,7 @@ public class AccountServiceTest {
 
         // Execute and verify
         assertThrows(AccessDeniedException.class, () -> {
-            accountService.generateStatement(1L, 1640995200L, 1643673600L, "123456");
+            accountService.generateStatement(1L, 1640995200000L, 1643673600000L, "123456");
         });
     }
 
@@ -213,7 +213,7 @@ public class AccountServiceTest {
 
         // Execute and verify - should fail on PIN verification before any other validations
         assertThrows(com.d01.simplebank.exception.InvalidPinException.class, () -> {
-            accountService.generateStatement(1L, 1640995200L, 1643673600L, "654321");
+            accountService.generateStatement(1L, 1640995200000L, 1643673600000L, "654321");
         });
     }
 } 
